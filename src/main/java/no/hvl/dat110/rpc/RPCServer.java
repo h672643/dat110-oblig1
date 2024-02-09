@@ -2,10 +2,13 @@ package no.hvl.dat110.rpc;
 
 import java.util.HashMap;
 
+
 import no.hvl.dat110.TODO;
 import no.hvl.dat110.messaging.MessageConnection;
 import no.hvl.dat110.messaging.Message;
 import no.hvl.dat110.messaging.MessagingServer;
+import no.hvl.dat110.messaging.MessageUtils;
+
 
 public class RPCServer {
 
@@ -44,15 +47,27 @@ public class RPCServer {
 		   // TODO - START
 		   // - receive a Message containing an RPC request
 		   // - extract the identifier for the RPC method to be invoked from the RPC request
-		   // - extract the method's parameter by decapsulating using the RPCUtils
 		   // - lookup the method to be invoked
-		   // - invoke the method and pass the param
-		   // - encapsulate return value 
-		   // - send back the message containing the RPC reply
-			
-		   if (true)
-				throw new UnsupportedOperationException(TODO.method());
+		   // - invoke the method
+		   // - send back the message containing RPC reply
 		   
+		   requestmsg = connection.receive();
+
+			byte[] msg = requestmsg.getData();
+			rpcid = msg[0];
+			RPCRemoteImpl method = services.get(rpcid);
+			if(method == null){
+				byte[] emptyData = new byte[0];
+				replymsg = new Message(emptyData);
+				connection.send(replymsg);
+			} else {
+				byte[] input = RPCUtils.decapsulate(requestmsg.getData());
+				byte[] result = method.invoke(input);
+				replymsg = new Message(RPCUtils.encapsulate(rpcid, result));
+				connection.send(replymsg);
+			}
+			
+
 		   // TODO - END
 
 			// stop the server if it was stop methods that was called
